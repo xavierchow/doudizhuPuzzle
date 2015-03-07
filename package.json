@@ -1,0 +1,20 @@
+{
+  "name": "doudizhuPuzzle",
+  "version": "0.0.1",
+  "description": "doudizhu puzzle explorer",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "chai": "~2.1.1",
+    "debug": "~2.1.2",
+    "lodash": "~3.3.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "xavierchow",
+  "license": "MIT"
+}
