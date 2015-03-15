@@ -1,6 +1,5 @@
 should = require('chai').should()
 {explore} = require '../index.coffee'
-{parse} = require '../index.coffee'
 describe 't: 2, 3 vs l:5', ->
   t =
     hand: [2, 3]

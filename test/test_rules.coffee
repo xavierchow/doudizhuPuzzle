@@ -2,13 +2,38 @@ should = require('chai').should()
 {setForPlay, getPairs, getTrips, getQuads,
   getTripWithKickers, getQuadWithKickers, getStraight, getTrump} = require '../rule.coffee'
 
-describe.skip 'setForPlay', ->
-  hand = ['J', 2, 4, 5, 'J', 5, 'A', 'R', 'Q']
-  it 'sort', ->
+describe 'setForPlay', ->
+  it 'two cards', ->
+    hand = ['J', 2]
     ret = setForPlay(hand)
-    #ret.join('').should.be.equal('2455JQAR')
-    ret[0].should.be.equal('55')
-    ret[1].should.be.equal('JJ')
+    ret[0].should.be.equal('2')
+    ret[1].should.be.equal('J')
+  it 'pair cards', ->
+    hand = ['J', 'J', 2]
+    ret = setForPlay(hand)
+    ret[0].should.be.equal('2')
+    ret[1].should.be.equal('J')
+    ret[2].should.be.equal('JJ')
+  it '4 with 2', ->
+    hand = [3, 3, 'J', 'J', 3, 3]
+    ret = setForPlay(hand)
+    ret[0].should.be.equal('3')
+    ret[1].should.be.equal('J')
+    ret[2].should.be.equal('33')
+    ret[3].should.be.equal('JJ')
+    ret[4].should.be.equal('333')
+    ret[5].should.be.equal('3333')
+    ret[6].should.be.equal('333J')
+    ret[7].should.be.equal('3333JJ')
+  it 'straingt', ->
+    hand = [2, 3, 4, 6, 5]
+    ret = setForPlay(hand)
+    ret[0].should.be.equal('2')
+    ret[1].should.be.equal('3')
+    ret[2].should.be.equal('4')
+    ret[3].should.be.equal('5')
+    ret[4].should.be.equal('6')
+    ret[5].should.be.equal('23456')
 
 describe 'getPairs', ->
   it 'should ok with no more than 3', ->
@@ -138,7 +163,5 @@ describe 'getTrump', ->
   it 'should find two', ->
     sorted = [4, 4, 4, 4, 'J','J','J','J','B','R' ]
     ret = getTrump(sorted)
-    ret.length.should.be.equal(3)
-    ret[0].should.be.equal('4444')
-    ret[1].should.be.equal('JJJJ')
-    ret[2].should.be.equal('BR')
+    ret.length.should.be.equal(1)
+    ret[0].should.be.equal('BR')

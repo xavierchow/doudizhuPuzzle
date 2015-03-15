@@ -8,19 +8,9 @@ map =
   'B': 15
   'R': 16
 
-setForPlay = (hand) ->
-  sorted = _.sortBy hand, (n) ->
-    if _.isString(n)
-      return map[n]
-    return n
-  sorted = cast2char(sorted)
-  unmarched = _.uniq sorted
-  pairs =  getPair(sorted)
-  trips = getTrips(sorted)
-  quads = getQuads(sorted)
-  return
-
 cast2point = (arrayWithString) ->
+  if not _.isArray(arrayWithString)
+    arrayWithString = [arrayWithString]
   _.map arrayWithString, (s) ->
     return s if not _.isString(s)
     return map[s] || parseInt(s, 10)
@@ -29,6 +19,69 @@ cast2char = (arrayWithInt) ->
   _.map arrayWithInt, (n) ->
     return n if _.isString(n)
     return n.toString()
+
+isTrump = (p) ->
+  return true if p is 'BR'
+  if p.length is 4 and p[0] is p[3]
+    return true
+  return false
+
+isSameType = (p, f) ->
+  if p.length isnt f.length
+    return false
+  if p.length is 4
+    pType = if p[0] isnt [3] then '3with1' else '4'
+    fType = if f[0] isnt [3] then '3with1' else '4'
+    return pType is fType
+  return true
+
+defeat = (playing, face) ->
+  if not isSameType(playing, face) and not isTrump(playing)
+    return false
+  if isTrump(playing) and not isTrump(face)
+    return true
+  if isTrump(playing)
+    if playing is 'BR'
+      return true
+    if face is 'BR'
+      return false
+    return cast2point(playing[0])[0] > cast2point(face[0])[0]
+  return cast2point(playing[0])[0] > cast2point(face[0])[0]
+
+setForPlay = (hand, face) ->
+  sorted = _.sortBy hand, (n) ->
+    if _.isString(n)
+      return map[n]
+    return n
+  sorted = cast2char(sorted)
+  unmarched = _.uniq sorted
+  pairs =  getPairs(sorted)
+  trips = getTrips(sorted)
+  quads = getQuads(sorted)
+  tripWithKickers = getTripWithKickers(sorted)
+  quadWithKickers = getQuadWithKickers(sorted)
+  straight = getStraight(sorted)
+  trump = getTrump(sorted)
+  all = unmarched.concat pairs, trips, quads, tripWithKickers, quadWithKickers, straight, trump
+  if face?
+    _.filter(all, (n) ->
+      return defeat(n, face)
+    )
+  else
+    if hand.length is 6 and quadWithKickers.length isnt 0
+      return quadWithKickers
+    if hand.length is 5 and straight.length isnt 0
+      return straight
+    if hand.length is 4
+      return quads if quads.length isnt 0
+      return tripWithKickers if tripWithKickers.length isnt 0
+    if hand.length is 3 and trips.length isnt 0
+      return trips
+    if hand.length is 2
+      return pairs if pairs.length isnt 0
+      return trump if trump.length isnt 0
+    return all
+
 
 getPairs = (sorted) ->
   return getNOfAKind(sorted, 2)
@@ -89,11 +142,11 @@ getStraight = (sorted) ->
   return result
 
 getTrump = (sorted) ->
-  quads = getQuads(sorted)
+  ret = []
   # red joker with black joker is the biggest trump
   if _.indexOf(sorted, 'B') > -1 and _.indexOf(sorted, 'R') > -1
-    quads.push 'BR'
-  return quads
+    ret.push 'BR'
+  return ret
   
 exports.setForPlay = setForPlay
 exports.getPairs = getPairs
@@ -103,3 +156,5 @@ exports.getTripWithKickers = getTripWithKickers
 exports.getQuadWithKickers = getQuadWithKickers
 exports.getStraight = getStraight
 exports.getTrump = getTrump
+exports.defeat = defeat
+exports.cast2char = cast2char

@@ -1,4 +1,5 @@
 _ = require 'lodash'
+{setForPlay, cast2char} = require './rule'
 tDebug = require('debug')('t')
 lDebug = require('debug')('l')
 sysDebug = require('debug')('sys')
@@ -9,30 +10,38 @@ debug = (obj) ->
 
 paths = []
 traceToCertainlyWin = []
+deduct = (hand, p) ->
+  _.forEach(p, (v) ->
+     i = _.indexOf(hand, v)
+     hand.splice(i, 1)
+  )
+  return hand
 explore = (eh, lh, face, step, path) ->
   if not step?
     step = 0
   if not path?
     path = []
+    eh.hand = cast2char(eh.hand)
+    lh.hand = cast2char(lh.hand)
   #if face?
   #  debug(eh)(indentSpaces(step) + "#{eh.id} at step#{step} choose pass")
   #  explore(lh, eh, null, step + 1)
-  for p, i in eh.hand when p > (if face? then face else -1)
+  for p, i in setForPlay(eh.hand, face)
     #debug()("#{eh.id} start---->") if step is 0
     clonedEh = _.cloneDeep(eh)
-    clonedEh.hand.splice(i,1)
+    deduct(clonedEh.hand, p)
     #debug(eh)(indentSpaces(step) + "#{eh.id} at step#{step} played: #{p}")
     path.push "#{eh.id}#{p}"
     if clonedEh.hand.length is 0
       #debug()("#{clonedEh.id} wins")
       path.push "#{clonedEh.id}w"
       return true
-    mypath = []
-    path.push mypath
+    childPath = []
+    path.push childPath
     if hasToPass(lh.hand, p)
-      explore(clonedEh, lh, null, step + 1, mypath)
+      explore(clonedEh, lh, null, step + 1, childPath)
     else
-      explore(lh, clonedEh, p, step + 1, mypath)
+      explore(lh, clonedEh, p, step + 1, childPath)
   if step is 0
     debug()('path:' + JSON.stringify(path))
     #make sure clear
@@ -56,6 +65,7 @@ findCertainlyWinNodes = (path, trace) ->
       currentTrace.push(node)
       findCertainlyWinNodes(path[i+1], currentTrace)
       
+#FIXME algorithm too simple
 isCertainlyWinNode = (current, array) ->
   prefix = current[0]
   if _.isString(array)
@@ -63,6 +73,7 @@ isCertainlyWinNode = (current, array) ->
   rest =  _.flattenDeep(array)
   opposite = if prefix is 't' then 'l' else 't'
   return _.indexOf(rest, "#{opposite}w") is -1
+
 isType = (node, type) ->
   return node[0] is type
 
@@ -70,9 +81,7 @@ indentSpaces = (howmany) ->
   return Array(howmany + 1).join(' ')
 
 hasToPass = (hand, face) ->
-  for h in hand
-    return false if h > face
-  return true
+  return setForPlay(hand, face).length is 0
 
 flatten = (h, t)->
   result = []
