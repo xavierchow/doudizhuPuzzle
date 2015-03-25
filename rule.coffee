@@ -30,8 +30,8 @@ isSameType = (p, f) ->
   if p.length isnt f.length
     return false
   if p.length is 4
-    pType = if p[0] isnt [3] then '3with1' else '4'
-    fType = if f[0] isnt [3] then '3with1' else '4'
+    pType = if p[0] isnt p[3] then '3with1' else '4'
+    fType = if f[0] isnt f[3] then '3with1' else '4'
     return pType is fType
   return true
 
@@ -48,6 +48,9 @@ defeat = (playing, face) ->
     return cast2point(playing[0])[0] > cast2point(face[0])[0]
   return cast2point(playing[0])[0] > cast2point(face[0])[0]
 
+###
+#the face param really good here FIXME
+###
 setForPlay = (hand, face) ->
   sorted = _.sortBy hand, (n) ->
     if _.isString(n)
@@ -62,7 +65,7 @@ setForPlay = (hand, face) ->
   quadWithKickers = getQuadWithKickers(sorted)
   straight = getStraight(sorted)
   trump = getTrump(sorted)
-  all = unmarched.concat pairs, trips, quads, tripWithKickers, quadWithKickers, straight, trump
+  all = trump.concat straight, quadWithKickers, tripWithKickers, quads, trips, pairs, unmarched
   if face?
     _.filter(all, (n) ->
       return defeat(n, face)

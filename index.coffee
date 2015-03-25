@@ -1,16 +1,11 @@
 _ = require 'lodash'
 {setForPlay, cast2char} = require './rule'
-tDebug = require('debug')('t')
-lDebug = require('debug')('l')
-sysDebug = require('debug')('sys')
-debug = (obj) ->
-  return tDebug if obj?.id is 't'
-  return lDebug if obj?.id is 'l'
-  return sysDebug
+debug = require('debug')('sys')
 
-paths = []
-traceToCertainlyWin = []
+finalTrace = []
+CHOOSE_PASS = 'p'
 deduct = (hand, p) ->
+  return hand if p is CHOOSE_PASS
   _.forEach(p, (v) ->
      i = _.indexOf(hand, v)
      hand.splice(i, 1)
@@ -23,104 +18,77 @@ explore = (eh, lh, face, step, path) ->
     path = []
     eh.hand = cast2char(eh.hand)
     lh.hand = cast2char(lh.hand)
-  #if face?
-  #  debug(eh)(indentSpaces(step) + "#{eh.id} at step#{step} choose pass")
-  #  explore(lh, eh, null, step + 1)
-  for p, i in setForPlay(eh.hand, face)
-    #debug()("#{eh.id} start---->") if step is 0
+
+  allPossibles = setForPlay(eh.hand, face)
+  if face?
+    allPossibles.push CHOOSE_PASS
+  for p in allPossibles
     clonedEh = _.cloneDeep(eh)
     deduct(clonedEh.hand, p)
-    #debug(eh)(indentSpaces(step) + "#{eh.id} at step#{step} played: #{p}")
-    path.push "#{eh.id}#{p}"
+    node = {role: eh.id, play: p}
     if clonedEh.hand.length is 0
-      #debug()("#{clonedEh.id} wins")
-      path.push "#{clonedEh.id}w"
-      return true
-    childPath = []
-    path.push childPath
+      node.winner = true
+      path.push(node)
+      return
+    node.childPath = []
+    path.push(node)
     if hasToPass(lh.hand, p)
-      explore(clonedEh, lh, null, step + 1, childPath)
+      explore(clonedEh, lh, null, step + 1, node.childPath)
     else
-      explore(lh, clonedEh, p, step + 1, childPath)
-  if step is 0
-    debug()('path:' + JSON.stringify(path))
-    #make sure clear
-    traceToCertainlyWin = []
-    findCertainlyWinNodes(path)
-    return findWinPath(traceToCertainlyWin)
+      explore(lh, clonedEh, (if p is CHOOSE_PASS then null else p), step + 1, node.childPath)
+    if step is 0
+      finalTrace = []
+      #debug('path: ' + JSON.stringify(path))
+      markAllNodes(path)
+      findWinTrace(path)
+      if finalTrace.length > 0
+        debug('final' + JSON.stringify(finalTrace))
+        return finalTrace
+  return []
 
-
-findCertainlyWinNodes = (path, trace) ->
-  unless _.isArray(path)
-    return true
-  if not trace?
+findWinTrace = (path, trace) ->
+  unless trace?
     trace = []
-  for node, i in path when i%2 is 0
-    currentTrace = _.clone(trace)
-    if isCertainlyWinNode(node, path[i+1])
-      currentTrace.push(node)
-      debug()('found: ' + JSON.stringify(currentTrace) + ' tail: ' + JSON.stringify(path[i+1]))
-      traceToCertainlyWin.push {pathToWin: currentTrace, tail: path[i+1]}
-    else
-      currentTrace.push(node)
-      findCertainlyWinNodes(path[i+1], currentTrace)
-      
+  earlyHand = if trace[0]? then trace[0][0] else path[0].role
+
+  for n in path
+    if n.role is earlyHand and n.inKeyPath or n.role isnt earlyHand and not n.inKeyPath
+      clonedTrace = _.clone(trace)
+      clonedTrace.push "#{n.role}#{n.play}"
+      if n.childPath?
+        findWinTrace(n.childPath, clonedTrace)
+      else
+        finalTrace.push clonedTrace
+  return
+
+markAllNodes = (path) ->
+  for n in path
+    inKeyPath(n)
+    if n.childPath
+      markAllNodes(n.childPath)
+
+inKeyPath = (node) ->
+  if isCertainlyWinNode(node)
+    node.inKeyPath = true
+    return true
+  for c in node.childPath
+    if inKeyPath(c)
+      node.inKeyPath = c.role is node.role
+      return node.inKeyPath
+  if node.childPath[0].role is node.role
+    node.inKeyPath = false
+  else
+    #if none of opponent children is inKeyPath, then current is opposte
+    node.inKeyPath = true
+  return node.inKeyPath
+
 #FIXME algorithm too simple
-isCertainlyWinNode = (current, array) ->
-  prefix = current[0]
-  if _.isString(array)
-    return array is "#{prefix}w" #TODO definately win if string?
-  rest =  _.flattenDeep(array)
-  opposite = if prefix is 't' then 'l' else 't'
-  return _.indexOf(rest, "#{opposite}w") is -1
-
-isType = (node, type) ->
-  return node[0] is type
-
-indentSpaces = (howmany) ->
-  return Array(howmany + 1).join(' ')
+isCertainlyWinNode = (node) ->
+  return true if node.winner
+  return false
 
 hasToPass = (hand, face) ->
+  return false if face is CHOOSE_PASS
   return setForPlay(hand, face).length is 0
 
-flatten = (h, t)->
-  result = []
-  _flatten = (head, tail) ->
-    if not _.isArray(tail)
-      head.push tail
-      result.push head
-      return
-    for n, i in tail when i%2 is 0
-      newHead = _.clone(head)
-      newHead.push n
-      _flatten(newHead, tail[i+1])
-  _flatten(h, t)
-  return result
-
-findWinPath = (traceToCertainlyWin) ->
-  grouped = _.groupBy traceToCertainlyWin, (obj) ->
-    return obj.pathToWin[0]
-  #find shortest path of each cluster
-  for root, cluster of grouped
-    len = null
-    for t in cluster
-      if not len? or t.pathToWin.length < len
-        len = t.pathToWin.length
-        grouped[root] = flatten(t.pathToWin, t.tail)
-      else if t.pathToWin.length is len
-        grouped[root] = grouped[root].concat(flatten(t.pathToWin, t.tail))
-  #simply to array
-  result = null
-  for s, arr of grouped
-    if not result?
-      result = arr
-    else
-      result = result.concat arr
-  #filter lose path which begin with t but end with l
-  result = _.filter result, (p) ->
-    return p[0][0] is p[p.length-1][0]
-  debug()(JSON.stringify(result))
-  return result
-
 exports.explore = explore
-exports.findCertainlyWinNodes = findCertainlyWinNodes

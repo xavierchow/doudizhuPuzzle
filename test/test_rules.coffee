@@ -1,5 +1,5 @@
 should = require('chai').should()
-{setForPlay, getPairs, getTrips, getQuads,
+{setForPlay, defeat, getPairs, getTrips, getQuads,
   getTripWithKickers, getQuadWithKickers, getStraight, getTrump} = require '../rule.coffee'
 
 describe 'setForPlay', ->
@@ -14,9 +14,9 @@ describe 'setForPlay', ->
     ret[0].should.be.equal('2')
     ret[1].should.be.equal('J')
     ret[2].should.be.equal('JJ')
-  it '4 with 2', ->
+  it.skip '4 with 2', ->
     hand = [3, 3, 'J', 'J', 3, 3]
-    ret = setForPlay(hand)
+    ret = setForPlay(hand, [2])
     ret[0].should.be.equal('3')
     ret[1].should.be.equal('J')
     ret[2].should.be.equal('33')
@@ -25,15 +25,15 @@ describe 'setForPlay', ->
     ret[5].should.be.equal('3333')
     ret[6].should.be.equal('333J')
     ret[7].should.be.equal('3333JJ')
-  it 'straingt', ->
-    hand = [2, 3, 4, 6, 5]
+  it.skip 'straingt', ->
+    hand = [3, 4, 5, 6, 7]
     ret = setForPlay(hand)
-    ret[0].should.be.equal('2')
-    ret[1].should.be.equal('3')
-    ret[2].should.be.equal('4')
-    ret[3].should.be.equal('5')
-    ret[4].should.be.equal('6')
-    ret[5].should.be.equal('23456')
+    ret[0].should.be.equal('3')
+    ret[1].should.be.equal('4')
+    ret[2].should.be.equal('5')
+    ret[3].should.be.equal('6')
+    ret[4].should.be.equal('7')
+    ret[5].should.be.equal('34567')
 
 describe 'getPairs', ->
   it 'should ok with no more than 3', ->
@@ -165,3 +165,9 @@ describe 'getTrump', ->
     ret = getTrump(sorted)
     ret.length.should.be.equal(1)
     ret[0].should.be.equal('BR')
+describe 'defeat', ->
+  it 'quad should not be defeated by fullhouse', ->
+    sorted = [4, 4, 4, 5]
+    ret = defeat('999B', '3333')
+    ret.should.not.be.ok
+

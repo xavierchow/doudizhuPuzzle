@@ -21,7 +21,7 @@ describe 't:2, 6 vs l: 5', ->
   it 't should win with one', ->
     ret = explore t, l, null
     ret.length.should.be.equal(1)
-    ret[0].join('').should.be.equal('t6t2tw')
+    ret[0].join('').should.be.equal('t6t2')
 
 describe 't: 2, 9 vs l: 5, 7', ->
   t =
@@ -33,11 +33,12 @@ describe 't: 2, 9 vs l: 5, 7', ->
   it 't should win with 3 case', ->
     ret = explore t, l, null
     ret.length.should.be.equal(3)
-    ret[0].join('').should.be.equal('t2l5t9tw')
-    ret[1].join('').should.be.equal('t2l7t9tw')
-    ret[2].join('').should.be.equal('t9t2tw')
+    ret[0].join('').should.be.equal('t2l5t9')
+    ret[1].join('').should.be.equal('t2l7t9')
+    ret[2].join('').should.be.equal('t9lpt2')
+    ret[3].join('').should.be.equal('t9t2')
 
-describe 't: 2, 3 vs l: 1, 2, 5', ->
+describe.only 't: 2, 3 vs l: 1, 2, 5', ->
   t =
     hand: [2, 3]
     id: 't'
@@ -46,7 +47,8 @@ describe 't: 2, 3 vs l: 1, 2, 5', ->
     id: 'l'
   it 't should win with 1 case', ->
     ret = explore t, l, null
-    ret.length.should.be.equal(2)
-    ret[0].join('').should.be.equal('t2l5l1t3tw')
-    ret[1].join('').should.be.equal('t2l5l2t3tw')
+    ret.length.should.be.equal(3)
+    ret[0].join('').should.be.equal('t2l5l1t3')
+    ret[1].join('').should.be.equal('t2l5l2t3')
+    ret[2].join('').should.be.equal('t2lpt3')
 
