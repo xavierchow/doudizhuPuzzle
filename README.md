@@ -20,5 +20,5 @@ the tenant plays first.
 
 
 #Notes
-I found an algorithm for exploreing the solution, but the performance is a big problem, the program runs out of memory with the cards above. So I do some [analysis](https://github.com/xavierchow/doudizhuPuzzle/wiki/Some-Analysis) to narrow the scale.
+I found an algorithm for exploring the solution, but the performance is a big problem, the program runs out of memory with the cards above. So I do some [analysis](https://github.com/xavierchow/doudizhuPuzzle/wiki/Some-Analysis) to narrow the scale.
 The answer I found is that the tenant will never win, please let me know if I'm wrong.
