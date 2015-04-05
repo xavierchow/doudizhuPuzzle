@@ -26,14 +26,15 @@ describe 't:2, 2, A vs l: 5, 5', ->
 
 describe.only 'final', ->
   t =
-    hand: [3,3,3,'T','T','A','A','A']
+    hand: [4,5,6,7,'T','T','A','A']
     #hand: [3,3,3,3,4,5,6,7,'T','T','A','A','A']
+    #hand: [3,3,3,3,4,5,6,7,'T','T','A','A','A','A']
     id: 't'
   l =
-    hand: [9,9,9,'J','J','R']
+    hand: [9,9,9,'J','J']
     #hand: [9,9,9,'J','J','R','B']
     id: 'l'
   it 't should win with one', ->
-    ret = explore l, t, null
+    ret = explore t, l, null
     ret.length.should.be.equal(4)
 
